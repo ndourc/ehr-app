@@ -1,0 +1,196 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   SENTIMENT-AWARE EHR — MODERN CLINICAL DESIGN SYSTEM
+   Calm. Precise. Trustworthy. Inspired by modern medical software.
+   All colors HSL.
+   ============================================================ */
+
+@layer base {
+  :root {
+    /* Surfaces — cool clinical neutrals */
+    --background: 210 25% 98%;
+    --foreground: 215 28% 17%;
+
+    --surface: 0 0% 100%;
+    --surface-2: 210 30% 96%;
+    --surface-3: 210 25% 93%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 215 28% 17%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 28% 17%;
+
+    /* Brand — calm clinical teal/blue */
+    --primary: 199 89% 42%;
+    --primary-hover: 199 89% 36%;
+    --primary-foreground: 0 0% 100%;
+    --primary-soft: 199 89% 95%;
+
+    --secondary: 210 30% 96%;
+    --secondary-foreground: 215 28% 17%;
+
+    --muted: 210 25% 95%;
+    --muted-foreground: 215 14% 45%;
+
+    --accent: 199 89% 95%;
+    --accent-foreground: 199 89% 30%;
+
+    /* Clinical semantic — verdict colors */
+    --distress: 0 72% 51%;
+    --distress-foreground: 0 0% 100%;
+    --distress-soft: 0 85% 96%;
+
+    --stable: 158 64% 38%;
+    --stable-foreground: 0 0% 100%;
+    --stable-soft: 158 70% 95%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    /* Severity scale 0–3 (calm clinical ramp: gray → amber → orange → red) */
+    --sev-0: 210 25% 95%;
+    --sev-0-fg: 215 14% 35%;
+    --sev-1: 48 96% 89%;
+    --sev-1-fg: 32 81% 29%;
+    --sev-2: 27 96% 88%;
+    --sev-2-fg: 17 88% 35%;
+    --sev-3: 0 86% 92%;
+    --sev-3-fg: 0 74% 38%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Structural */
+    --border: 215 20% 90%;
+    --border-strong: 215 20% 82%;
+    --input: 215 20% 88%;
+    --ring: 199 89% 42%;
+
+    --radius: 0.625rem;
+
+    /* Shadows — soft, layered, elevation-based */
+    --shadow-xs: 0 1px 2px 0 hsl(215 25% 27% / 0.04);
+    --shadow-sm: 0 1px 3px 0 hsl(215 25% 27% / 0.06), 0 1px 2px -1px hsl(215 25% 27% / 0.04);
+    --shadow-md: 0 4px 12px -2px hsl(215 25% 27% / 0.08), 0 2px 4px -2px hsl(215 25% 27% / 0.04);
+    --shadow-lg: 0 12px 32px -8px hsl(215 25% 27% / 0.12), 0 4px 8px -4px hsl(215 25% 27% / 0.06);
+
+    /* Sidebar */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 215 28% 17%;
+    --sidebar-primary: 199 89% 42%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 30% 96%;
+    --sidebar-accent-foreground: 215 28% 17%;
+    --sidebar-border: 215 20% 90%;
+    --sidebar-ring: 199 89% 42%;
+  }
+
+  .dark {
+    --background: 215 32% 9%;
+    --foreground: 210 25% 96%;
+    --surface: 215 28% 12%;
+    --surface-2: 215 25% 15%;
+    --surface-3: 215 22% 19%;
+    --card: 215 28% 12%;
+    --card-foreground: 210 25% 96%;
+    --popover: 215 28% 12%;
+    --popover-foreground: 210 25% 96%;
+    --primary: 199 89% 52%;
+    --primary-hover: 199 89% 58%;
+    --primary-foreground: 215 32% 9%;
+    --primary-soft: 199 60% 18%;
+    --secondary: 215 25% 17%;
+    --secondary-foreground: 210 25% 96%;
+    --muted: 215 25% 17%;
+    --muted-foreground: 215 15% 65%;
+    --accent: 199 60% 18%;
+    --accent-foreground: 199 89% 80%;
+    --distress-soft: 0 50% 18%;
+    --stable-soft: 158 50% 14%;
+    --sev-0: 215 22% 19%;
+    --sev-0-fg: 215 15% 70%;
+    --sev-1: 32 50% 22%;
+    --sev-1-fg: 48 96% 78%;
+    --sev-2: 17 60% 25%;
+    --sev-2-fg: 27 96% 80%;
+    --sev-3: 0 50% 28%;
+    --sev-3-fg: 0 86% 85%;
+    --border: 215 22% 22%;
+    --border-strong: 215 22% 28%;
+    --input: 215 22% 22%;
+    --ring: 199 89% 52%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html, body, #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    font-feature-settings: "cv11", "ss01", "ss03";
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', system-ui, sans-serif;
+    @apply font-semibold tracking-tight text-foreground;
+    letter-spacing: -0.01em;
+  }
+
+  /* Numeric/code uses tabular mono */
+  .font-num {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+}
+
+@layer components {
+  /* Soft section card — the workhorse surface */
+  .clinical-card {
+    @apply bg-card border border-border rounded-xl shadow-sm;
+  }
+
+  .clinical-card-elevated {
+    @apply bg-card border border-border rounded-xl shadow-md;
+  }
+
+  /* Subtle section header */
+  .section-eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground;
+  }
+
+  /* Severity backgrounds (filled state) */
+  .sev-bg-0 { background-color: hsl(var(--sev-0)); color: hsl(var(--sev-0-fg)); }
+  .sev-bg-1 { background-color: hsl(var(--sev-1)); color: hsl(var(--sev-1-fg)); }
+  .sev-bg-2 { background-color: hsl(var(--sev-2)); color: hsl(var(--sev-2-fg)); }
+  .sev-bg-3 { background-color: hsl(var(--sev-3)); color: hsl(var(--sev-3-fg)); }
+
+  /* Status dot pulse for live indicator */
+  .pulse-dot::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 9999px;
+    background: hsl(var(--stable));
+    opacity: 0.5;
+    animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+  }
+
+  @keyframes pulse-ring {
+    0% { transform: scale(0.9); opacity: 0.6; }
+    80%, 100% { transform: scale(2.4); opacity: 0; }
+  }
+}
+
+/* Inter font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
