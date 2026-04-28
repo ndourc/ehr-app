@@ -3,9 +3,10 @@ FastAPI Application Entry Point
 =================================
 Startup sequence:
   1. Configure structured JSON logging.
-  2. Create PostgreSQL tables (idempotent).
-  3. Load ClinicalBERT + trained classifier into the PredictionPipeline.
-  4. Register API router.
+  2. Create database tables (idempotent).
+  3. Seed default development users.
+  4. Load ClinicalBERT + trained classifier into the PredictionPipeline.
+  5. Register API routers.
 
 Run:
     uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
@@ -19,8 +20,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import router, set_pipeline
+from app.auth.routes import router as auth_router
 from app.layers.output.predictor import PredictionPipeline
-from app.storage.database import create_tables
+from app.storage.database import AsyncSessionLocal, create_tables
+from app.storage.seed import seed_users
+from app.users.routes import router as users_router
 from app.utils.logging_config import configure_logging
 
 
@@ -35,6 +39,10 @@ async def lifespan(app: FastAPI):  # type: ignore[type-arg]
 
     # Initialise database schema
     await create_tables()
+
+    # Seed development users
+    async with AsyncSessionLocal() as db:
+        await seed_users(db)
 
     # Load models once; share across all requests
     pipeline = PredictionPipeline()
@@ -59,21 +67,27 @@ async def lifespan(app: FastAPI):  # type: ignore[type-arg]
 app = FastAPI(
     title="Sentiment-Aware EHR Predictive Engine",
     description=(
-        "Real-time hybrid ML system for psychological distress prediction "
-        "from clinical notes + structured behavioural metrics."
+        "Secure clinical intelligence platform with hybrid ML distress prediction, "
+        "role-based access control, and explainability outputs."
     ),
-    version="1.0.0",
+    version="2.0.0",
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc",
 )
 
-# Allow same-origin requests in development
+# ── CORS ──────────────────────────────────────────────────────────────────────
+# In production, replace "*" with your frontend origin.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["GET", "POST"],
+    allow_origins=["http://localhost:5173", "http://localhost:3000", "http://localhost:8080"],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
+# ── Routers ───────────────────────────────────────────────────────────────────
+app.include_router(auth_router, prefix="/api/v1")
+app.include_router(users_router, prefix="/api/v1")
 app.include_router(router, prefix="/api/v1")
+

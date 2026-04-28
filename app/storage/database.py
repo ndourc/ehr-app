@@ -50,7 +50,7 @@ class Base(DeclarativeBase):
 
 async def create_tables() -> None:
     """Create all tables defined in ORM models (idempotent)."""
-    # Import models here so their metadata is registered before create_all
+    # Import all models here so their metadata is registered before create_all
     from app.storage import models as _  # noqa: F401
 
     async with engine.begin() as conn:

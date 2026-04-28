@@ -16,7 +16,7 @@ class Settings(BaseSettings):
 
     # ── Database ──────────────────────────────────────────────────────────
     DATABASE_URL: str = (
-        "postgresql+asyncpg://postgres:password@localhost:5432/ehr_db"
+        "sqlite+aiosqlite:///./ehr_db.sqlite3"
     )
 
     # ── Model ─────────────────────────────────────────────────────────────
@@ -31,6 +31,12 @@ class Settings(BaseSettings):
     MAX_TOKEN_LENGTH: int = 512
     DISTRESS_CLASS_WEIGHT: float = 3.0
     ATTENTION_TOP_K: int = 10
+
+    # ── Auth / JWT ────────────────────────────────────────────────────────
+    JWT_SECRET: str = "change-me-in-production-use-a-long-random-secret"
+    JWT_ALGORITHM: str = "HS256"
+    JWT_EXPIRY_MINUTES: int = 30
+    REFRESH_TOKEN_EXPIRY_DAYS: int = 7
 
 
 settings = Settings()

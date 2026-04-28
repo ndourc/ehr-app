@@ -1,6 +1,68 @@
 # Sentiment-Aware EHR Predictive Engine
 
-A real-time, clinical-grade hybrid machine learning system that predicts psychological **Distress** by fusing unstructured clinical notes (NLP) with structured behavioural metrics. Designed as a modular decision-support subsystem for Electronic Health Record (EHR) environments.
+A real-time hybrid machine learning system that predicts psychological **Distress** by fusing unstructured clinical notes with structured behavioural metrics. Built as a decision-support subsystem for Electronic Health Record (EHR) environments.
+
+---
+
+## What the System Can Do
+
+### Prediction
+- Accepts a dual-stream payload (free-text clinical note + 16 ordinal behavioural scores) and returns a binary prediction: **Distress** or **Stable**
+- Returns a **confidence score** (probability) between 0.0 and 1.0 alongside every prediction
+- Operates in real time via a REST API; inference latency is tracked and stored per request
+
+### Natural Language Understanding
+- Encodes clinical text using **ClinicalBERT** (`medicalai/ClinicalBERT`), a domain-specific transformer pretrained on clinical corpora
+- Preprocessing pipeline handles: template/boilerplate removal, contraction expansion, lowercasing, special-character stripping, negation preservation (`not_<word>`), and spaCy lemmatization
+- Supports clinical notes up to 512 tokens
+
+### Structured Feature Analysis
+- Ingests 16 ordinal behavioural variables (scale 0–3) across four clinical domains:
+  - Psychological State (mood swings, anxiety, depression, emotional stability)
+  - Behavioural Patterns (days indoors, social interaction, activity, sleep quality)
+  - Coping & Stress (coping struggles, stress level, work engagement, motivation)
+  - Cognitive Function & Social Context (concentration, decision difficulty, memory, support system)
+- Applies MinMax normalisation before fusion
+
+### Hybrid Fusion & Classification
+- Concatenates the 768-d ClinicalBERT CLS embedding with the 16-d normalised structured vector into a 784-d hybrid feature vector
+- Classifies using a **Random Forest + SVM ensemble** with class-weighted loss (configurable distress weight, default 3×) to handle clinical class imbalance
+- Training applies **SMOTE** oversampling on the training split
+
+### Explainability (XAI)
+- Extracts per-word attention weights from all ClinicalBERT layers and heads
+- Aggregates sub-word (WordPiece) tokens back to whole words using max-pooling
+- Returns the **top-k most influential words** (default k=10) with their normalised importance scores, enabling clinicians to understand what language drove the prediction
+- Negation-preserved tokens (e.g. `not_eating`) are surfaced in human-readable form
+
+### API
+- `POST /api/v1/predict` — full inference with XAI output
+- `GET /api/v1/health` — liveness check; reports pipeline readiness
+- `GET /api/v1/records` — paginated, filterable audit log of all past predictions
+
+### Auditability & Storage
+- Every prediction is persisted to a database (PostgreSQL / SQLite) including: raw inputs, cleaned text, normalised features, prediction, confidence, token importances, sentiment, token count, and latency
+- Structured JSON logging for all inference events and errors
+
+### Training & Evaluation
+- Trains end-to-end from either a CSV dataset or **synthetic data** (no real patient data required to get started)
+- Evaluation reports: accuracy, distress recall, F1, and ROC-AUC
+- **Ablation study** tool compares three variants side-by-side: Structured-Only, NLP-Only, and Hybrid
+
+### Frontend
+- React + TypeScript UI (Vite + shadcn/ui) for submitting predictions and viewing results
+- Components for prediction output, XAI token highlighting, severity picking, metrics display, and audit log browsing
+
+---
+
+## Current Limitations
+
+- The classifier is trained on **synthetic data** by default; real-world performance depends on fine-tuning with clinical datasets
+- ClinicalBERT input is capped at **512 tokens** — longer notes are truncated
+- No authentication or authorisation layer on the API endpoints currently
+- Explainability is attention-based (not SHAP/LIME); attention weights are a proxy for importance, not a guarantee
+
+---
 
 ---
 

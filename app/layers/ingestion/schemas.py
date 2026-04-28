@@ -97,3 +97,5 @@ class PredictResponse(BaseModel):
     prediction: str          # "Distress" | "Stable"
     confidence_score: float
     important_tokens: list[TokenWeight]
+    requested_by: str | None = None
+    timestamp: str | None = None
