@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+training/*.csv
+training/ehr_training_data.csv
+training/Mental Health Dataset.csv

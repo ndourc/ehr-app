@@ -232,6 +232,10 @@ def _parse_args() -> argparse.Namespace:
         help="Proportion of Distress samples in synthetic data (default 0.20).",
     )
     parser.add_argument(
+        "--limit", type=int, default=None,
+        help="Max rows to use from --csv (stratified sample). Omit to use all rows.",
+    )
+    parser.add_argument(
         "--artifacts-dir", type=Path,
         default=Path(settings.ARTIFACTS_DIR),
         help="Directory to save model artifacts.",
@@ -248,6 +252,28 @@ if __name__ == "__main__":
     if args.csv:
         logger.info("[Train] Loading data from CSV: %s", args.csv)
         df = pd.read_csv(args.csv)
+        if args.limit and args.limit < len(df):
+            from sklearn.model_selection import train_test_split  # noqa: PLC0415
+            df, _ = train_test_split(
+                df, train_size=args.limit,
+                stratify=df["label"],
+                random_state=args.seed,
+            )
+            df = df.reset_index(drop=True)
+            logger.info(
+                "[Train] Sampled %d rows (stratified) from %d total.",
+                len(df), args.limit,
+            )
+        # Invalidate embedding cache when row count changes
+        cache_path = Path(settings.ARTIFACTS_DIR) / _EMBEDDING_CACHE_FILE
+        if cache_path.exists():
+            cached_n = np.load(cache_path)["embeddings"].shape[0]
+            if cached_n != len(df):
+                logger.warning(
+                    "[Train] Cache size mismatch (%d cached vs %d rows) — deleting stale cache.",
+                    cached_n, len(df),
+                )
+                cache_path.unlink()
     else:
         logger.info(
             "[Train] Generating %d synthetic samples (distress_ratio=%.2f)…",

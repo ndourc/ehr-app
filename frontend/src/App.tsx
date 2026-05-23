@@ -14,6 +14,18 @@ import AnalystDashboard from "./pages/AnalystDashboard.tsx";
 import AdminDashboard from "./pages/AdminDashboard.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
+// Clinician sub-pages
+import InferencePage from "./pages/clinician/InferencePage.tsx";
+import AuditPage from "./pages/clinician/AuditPage.tsx";
+
+// Analyst sub-pages
+import OverviewPage from "./pages/analyst/OverviewPage.tsx";
+import TrendsPage from "./pages/analyst/TrendsPage.tsx";
+
+// Admin sub-pages
+import UsersPage from "./pages/admin/UsersPage.tsx";
+import SystemPage from "./pages/admin/SystemPage.tsx";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -27,10 +39,8 @@ const App = () => (
             {/* Public */}
             <Route path="/login" element={<Login />} />
 
-            {/* Root → redirect to dashboard */}
+            {/* Root → role router */}
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
-
-            {/* Role router */}
             <Route
               path="/dashboard"
               element={
@@ -40,7 +50,7 @@ const App = () => (
               }
             />
 
-            {/* Patient */}
+            {/* Patient — single view, uses DashboardShell */}
             <Route
               path="/patient"
               element={
@@ -50,7 +60,7 @@ const App = () => (
               }
             />
 
-            {/* Clinician */}
+            {/* Clinician — sidebar layout with nested routes */}
             <Route
               path="/clinician"
               element={
@@ -58,9 +68,13 @@ const App = () => (
                   <ClinicianDashboard />
                 </ProtectedRoute>
               }
-            />
+            >
+              <Route index element={<Navigate to="inference" replace />} />
+              <Route path="inference" element={<InferencePage />} />
+              <Route path="audit" element={<AuditPage />} />
+            </Route>
 
-            {/* Analyst */}
+            {/* Analyst — sidebar layout with nested routes */}
             <Route
               path="/analyst"
               element={
@@ -68,9 +82,13 @@ const App = () => (
                   <AnalystDashboard />
                 </ProtectedRoute>
               }
-            />
+            >
+              <Route index element={<Navigate to="overview" replace />} />
+              <Route path="overview" element={<OverviewPage />} />
+              <Route path="trends" element={<TrendsPage />} />
+            </Route>
 
-            {/* Admin */}
+            {/* Admin — sidebar layout with nested routes */}
             <Route
               path="/admin"
               element={
@@ -78,7 +96,11 @@ const App = () => (
                   <AdminDashboard />
                 </ProtectedRoute>
               }
-            />
+            >
+              <Route index element={<Navigate to="users" replace />} />
+              <Route path="users" element={<UsersPage />} />
+              <Route path="system" element={<SystemPage />} />
+            </Route>
 
             {/* Catch-all */}
             <Route path="*" element={<NotFound />} />

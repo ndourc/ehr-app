@@ -4,19 +4,88 @@ A real-time hybrid machine learning system that predicts psychological **Distres
 
 ---
 
+## Product Overview
+
+The **EHR Clinical Platform** is a full-stack clinical intelligence system built to help healthcare teams detect and monitor psychological distress in patients. It combines a natural language understanding pipeline (ClinicalBERT) with structured behavioural scoring to produce binary **Distress / Stable** predictions — and explains every prediction using attention-based token importance scores so clinicians are never left with a black-box result.
+
+### The Problem It Solves
+
+Mental health deterioration in clinical settings is frequently missed because it lives in two disconnected places: free-text clinician notes and structured intake questionnaires. This system bridges that gap by processing both streams simultaneously, fusing them into a single prediction with explainability output.
+
+### Who Uses It
+
+The platform serves four distinct user roles, each with their own purpose-built interface:
+
+| Role          | Who                         | What They Do                                                                                           |
+| ------------- | --------------------------- | ------------------------------------------------------------------------------------------------------ |
+| **Clinician** | Doctors, nurses, therapists | Enter clinical notes and behavioural scores, run live inference, read XAI-highlighted results          |
+| **Patient**   | Registered patients         | View a read-only history of their own assessment results and confidence scores                         |
+| **Analyst**   | Data analysts, researchers  | Monitor population-level prediction trends, model confidence, and inference latency across all records |
+| **Admin**     | System administrators       | Manage user accounts (create, activate/deactivate, reset passwords), monitor API and pipeline health   |
+
+### How It Works End-to-End
+
+```
+Clinician submits:
+  ┌─ Free-text clinical note (up to 512 tokens)
+  └─ 16 behavioural metric scores (0–3 severity scale)
+            │
+            ▼
+  FastAPI backend receives the dual-stream payload
+            │
+  ┌─────────┴──────────┐
+  │  NLP Pipeline       │  ClinicalBERT encodes the text → 768-d CLS embedding
+  │  Structured Pipeline│  MinMax normalises the 16 metric scores
+  └─────────┬──────────┘
+            │  concat → 784-d hybrid feature vector
+            ▼
+  RF + SVM ensemble classifier
+            │
+            ▼
+  Prediction (Distress / Stable) + Confidence score
+  + Top-10 attention-weighted tokens (XAI)
+            │
+            ▼
+  Result stored in audit database
+  Result returned to frontend → XAI highlights rendered over clinical text
+```
+
+### Key Design Decisions
+
+- **No black-box outputs** — every prediction is accompanied by token-level attention weights, rendered visually in the UI so clinicians can verify what language drove the result
+- **Class-imbalance aware** — SMOTE oversampling and a configurable distress class weight (default 3×) prioritise recall on the minority Distress class
+- **Role-gated access** — JWT-based auth with per-role route protection ensures patients only see their own data, clinicians cannot access admin tools, etc.
+- **Full audit trail** — every inference event (inputs, outputs, latency, XAI) is persisted to the database for clinical accountability
+- **Degraded-mode operation** — the API starts and serves health checks even if no trained model is present, making deployment and iteration safe
+
+### Technology Stack
+
+| Layer    | Technology                                                                                 |
+| -------- | ------------------------------------------------------------------------------------------ |
+| Frontend | React 18 + TypeScript, Vite, TailwindCSS, shadcn/ui, React Router v6                       |
+| Backend  | FastAPI (Python), async SQLAlchemy, Pydantic v2                                            |
+| ML / NLP | ClinicalBERT (`medicalai/ClinicalBERT`), scikit-learn (RF + SVM), imbalanced-learn (SMOTE) |
+| Database | SQLite (dev) / PostgreSQL (production)                                                     |
+| Auth     | JWT access + refresh tokens, bcrypt password hashing                                       |
+
+---
+
 ## What the System Can Do
 
 ### Prediction
+
 - Accepts a dual-stream payload (free-text clinical note + 16 ordinal behavioural scores) and returns a binary prediction: **Distress** or **Stable**
 - Returns a **confidence score** (probability) between 0.0 and 1.0 alongside every prediction
 - Operates in real time via a REST API; inference latency is tracked and stored per request
 
 ### Natural Language Understanding
+
 - Encodes clinical text using **ClinicalBERT** (`medicalai/ClinicalBERT`), a domain-specific transformer pretrained on clinical corpora
 - Preprocessing pipeline handles: template/boilerplate removal, contraction expansion, lowercasing, special-character stripping, negation preservation (`not_<word>`), and spaCy lemmatization
 - Supports clinical notes up to 512 tokens
 
 ### Structured Feature Analysis
+
 - Ingests 16 ordinal behavioural variables (scale 0–3) across four clinical domains:
   - Psychological State (mood swings, anxiety, depression, emotional stability)
   - Behavioural Patterns (days indoors, social interaction, activity, sleep quality)
@@ -25,31 +94,37 @@ A real-time hybrid machine learning system that predicts psychological **Distres
 - Applies MinMax normalisation before fusion
 
 ### Hybrid Fusion & Classification
+
 - Concatenates the 768-d ClinicalBERT CLS embedding with the 16-d normalised structured vector into a 784-d hybrid feature vector
 - Classifies using a **Random Forest + SVM ensemble** with class-weighted loss (configurable distress weight, default 3×) to handle clinical class imbalance
 - Training applies **SMOTE** oversampling on the training split
 
 ### Explainability (XAI)
+
 - Extracts per-word attention weights from all ClinicalBERT layers and heads
 - Aggregates sub-word (WordPiece) tokens back to whole words using max-pooling
 - Returns the **top-k most influential words** (default k=10) with their normalised importance scores, enabling clinicians to understand what language drove the prediction
 - Negation-preserved tokens (e.g. `not_eating`) are surfaced in human-readable form
 
 ### API
+
 - `POST /api/v1/predict` — full inference with XAI output
 - `GET /api/v1/health` — liveness check; reports pipeline readiness
 - `GET /api/v1/records` — paginated, filterable audit log of all past predictions
 
 ### Auditability & Storage
+
 - Every prediction is persisted to a database (PostgreSQL / SQLite) including: raw inputs, cleaned text, normalised features, prediction, confidence, token importances, sentiment, token count, and latency
 - Structured JSON logging for all inference events and errors
 
 ### Training & Evaluation
+
 - Trains end-to-end from either a CSV dataset or **synthetic data** (no real patient data required to get started)
 - Evaluation reports: accuracy, distress recall, F1, and ROC-AUC
 - **Ablation study** tool compares three variants side-by-side: Structured-Only, NLP-Only, and Hybrid
 
 ### Frontend
+
 - React + TypeScript UI (Vite + shadcn/ui) for submitting predictions and viewing results
 - Components for prediction output, XAI token highlighting, severity picking, metrics display, and audit log browsing
 
