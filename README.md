@@ -134,10 +134,7 @@ Clinician submits:
 
 - The classifier is trained on **synthetic data** by default; real-world performance depends on fine-tuning with clinical datasets
 - ClinicalBERT input is capped at **512 tokens** — longer notes are truncated
-- No authentication or authorisation layer on the API endpoints currently
 - Explainability is attention-based (not SHAP/LIME); attention weights are a proxy for importance, not a guarantee
-
----
 
 ---
 
@@ -329,11 +326,17 @@ python -m training.train --samples 1000 --distress-ratio 0.20
 
 ### Real data (CSV format)
 
-CSV must contain columns: `patient_id, clinical_text, label` (0=Stable, 1=Distress) + all 16 feature columns.
+First convert the raw dataset to the EHR training format, then train:
 
 ```bash
-python -m training.train --csv data/your_dataset.csv
+python -m training.convert_dataset \
+  --input "training/Mental Health Dataset.csv" \
+  --output training/ehr_training_data.csv
+
+python -m training.train --csv training/ehr_training_data.csv --limit 3000
 ```
+
+The `--limit` flag takes a stratified sample (recommended for CPU environments). Omit it to train on the full dataset (GPU recommended).
 
 ### Ablation study
 

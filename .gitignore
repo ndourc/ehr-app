@@ -92,3 +92,8 @@ frontend/*.local
 frontend/.env
 frontend/.env.*
 !frontend/.env.example
+
+# ──────────────────────────────────────────────
+# Training datasets (large CSV files)
+# ──────────────────────────────────────────────
+training/*.csv
